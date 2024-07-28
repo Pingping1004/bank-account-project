@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Welcome to account balance management system</h1>
+        <section class="panel">
+            <!-- left panel -->
+            <div class="left-panel">
+                <div class="balance">
+
+                    <div class="balance-btn btn-group">
+                        <button id="deposit-btn" class="animated-btn btn btn-outline-primary" type="button">Deposit</button>
+                        <button id="withdrawal-btn" class="animated-btn btn btn-outline-danger" type="button">Withdrawal</button>
+                    </div>
+
+                    <div class="balance-account">
+                        <h3 class="account-heading">Add Transaction</h3>
+                        <select class="account-input form-select custom-select dropdown" name="account-list" id="">
+                            <option value="Select Username">Select Username</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="balance-amount form-floating">
+                        <input class="amount-input form-control" type="number" min="0" placeholder="Add Transaction Amount" required>
+                        <label for="add-amount-input">Amount</label>
+                    </div>
+
+                    <button class="btn btn-primary" id="add-transaction-btn" type="button">Add Transaction</button>
+
+                </div>
+            </div>
+            <!-- right-panel -->
+            <div class="right-panel">
+                                
+                <div class="add-user">
+
+                    <div class="form-floating">
+                        <!-- <h2 id="delete-account-heading">Add Account</h2> -->
+                        <input class="form-control" id="add-user-input" type="text"
+                            placeholder="Enter Account Name/Owner Name">
+                        <label for="add-user-input">Add User</label>
+                    </div>
+                    <button id="add-user-btn" class="btn btn-primary">Add User</button>
+                </div>
+
+                <div class="delete-user dropdown">
+                    <h2 id="delete-user-heading">Delete Account</h2>
+                    <select id="delete-user" class="transaction-item form-select custom-select dropdown">
+                        <option id="" value="select-user">Select User</option>
+                    </select>
+                    <button id="delete-user-btn" class="btn btn-danger">Delete User</button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- This Part is optional feature for the main requirement -->
+        <section class="dashboard">
+
+            <div class="dashboard-item">
+                <h3 id="bank-balance"></h3>
+                <p>Bank Balance</p>
+            </div>
+
+            <div class="dashboard-item">
+                <h3 id="lending-money"></h3>
+                <p>Lending Money</p>
+            </div>
+
+            <div class="dashboard-item">
+                <h3 id="dividend-paid"></h3>
+                <p>Latest round dividend paid</p>
+            </div>
+
+        </section>
+
+        <section class="find-account-dropdown dropdown">
+            <label>Find Account</label>
+            <select id="filter-user-select" class="form-select custom-select dropdown">
+                <option value="select-account">Select Account</option>
+            </select>
+            <button id="apply-filter-btn" class="btn btn-secondary">Apply Filter</button>
+        </section>
+
+        <main>
+            <div class="account-list"></div>
+        </main>
+    </div>
+    <script defer type="module" src="/server/script.js"></script>
+</body>
+
+</html>
