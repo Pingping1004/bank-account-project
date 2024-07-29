@@ -1,4 +1,4 @@
-const accounts = [];
+let accounts = [];
 const usernames = [];
 
 let isInflow = null;
@@ -71,10 +71,11 @@ withdrawalBtn.addEventListener('click', (event) => {
 // alert("Set the initial cash in bank");
 
 // Fetch transactions on page load if user is logged in
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const userId = localStorage.getItem('user_id');
     if (userId) {
-        fetchTransactions(userId);
+        // fetchTransactions(userId);
+        await updateRenderTransactions();
     }
 });
 
@@ -94,11 +95,105 @@ async function fetchTransactions(userId) {
     }
 }
 
+function formatDateToMySQL(dateString) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+
+// async function addTransactions() {
+//     const user_id = localStorage.getItem('user_id');
+//     const name = accountNameInput.value;
+//     let amount = parseFloat(accountAmountInput.value);
+//     const transactionTime = new Date().toISOString();
+//     let flowType;
+//     let balance;
+
+//     if (name === "Select Username" || !amount || isNaN(amount) || amount <= 0 || isInflow === null) {
+//         alert("Please provide all necessary details correctly");
+//         return;
+//     }
+
+//     flowType = isInflow ? 'inflow' : 'outflow';
+
+//     const existingAccounts = await fetchTransactions(user_id);
+
+//     // Check if the account already exists
+//     let existingAccount = existingAccounts.find(account => account.name === name);
+
+//     if (existingAccount) {
+//         if (flowType === "inflow") {
+//             existingAccount.balance += amount;
+//         } else {
+//             existingAccount.balance -= amount;
+//             if (name === 'Admin') {
+//                 totalLending += amount;
+//                 console.log(`Admin Withdrawal: ${amount}. Total lending: ${totalLending}`);
+//             }
+//         }
+
+//         existingAccount.lastTransaction = { amount, flowType, transactionTime };
+//         balance = existingAccount.balance;
+
+//         await fetch(`http://localhost:3000/api/transactions/${existingAccount.id}`, {
+//             method: 'PUT',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify(transactionData)
+//         });
+
+//     } else {
+//         balance = (flowType === "inflow") ? amount : -amount;
+//         let lastTransaction = { amount, flowType, transactionTime };
+//         accounts.push({ user_id, name, amount, balance, flowType, lastTransaction, transactionTime, dividendsPaid: 0 });
+//     }
+
+//     const transactionData = {
+//         user_id,
+//         name,
+//         amount,
+//         totalLending,
+//         type: flowType,
+//         date: transactionTime,
+//         balance,
+//     };
+
+//     console.log('user_id set in localStorage:', user_id);
+//     console.log('Transaction data to be sent:', transactionData);
+
+
+//     try {
+//         const response = await fetch('http://localhost:3000/api/transactions', {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify(transactionData)
+//         });
+
+//         if (!response.ok) {
+//             throw new Error('Failed to store transaction');
+//         }
+//         const data = await response.json();
+//         console.log('Transaction stored successfully:', data);
+//         await updateRenderTransactions();
+//     } catch (error) {
+//         console.error('Error storing transaction:', error);
+//     }
+
+//     // getTotalBalance();
+//     clearAccountInputs();
+// }
+
 async function addTransactions() {
     const user_id = localStorage.getItem('user_id');
     const name = accountNameInput.value;
     let amount = parseFloat(accountAmountInput.value);
-    const transactionTime = new Date().toISOString();
+    const transactionTime = formatDateToMySQL(new Date());
     let flowType;
     let balance;
 
@@ -109,62 +204,84 @@ async function addTransactions() {
 
     flowType = isInflow ? 'inflow' : 'outflow';
 
-    let existingAccount = accounts.find(account => account.name === name);
+    const existingAccounts = await fetchTransactions(user_id);
+
+    // Check if the account already exists
+    let existingAccount = existingAccounts.find(account => account.name === name);
+
+    let transactionData = {
+        user_id,
+        name,
+        amount,
+        totalLending,
+        type: flowType,
+        date: formatDateToMySQL(transactionTime),
+        balance: balance // Placeholder, will be updated later
+    };
 
     if (existingAccount) {
+        // Update existing account
+        let newBalance = parseFloat(existingAccount.balance); // Ensure balance is a number
         if (flowType === "inflow") {
-            existingAccount.balance += amount;
+            newBalance += amount;
         } else {
-            existingAccount.balance -= amount;
+            newBalance-= amount;
             if (name === 'Admin') {
                 totalLending += amount;
                 console.log(`Admin Withdrawal: ${amount}. Total lending: ${totalLending}`);
             }
         }
 
+        // balance = existingAccount.balance;
         existingAccount.lastTransaction = { amount, flowType, transactionTime };
-        balance = existingAccount.balance;
+        balance = newBalance;
+
+        // transactionData.balance = balance;
+        transactionData.balance = balance;
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/transactions/${existingAccount.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(transactionData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update transaction');
+            }
+            const data = await response.json();
+            console.log('Transaction updated successfully:', data);
+            await updateRenderTransactions();
+        } catch (error) {
+            console.error('Error updating transaction:', error);
+        }
 
     } else {
+        // Add new account
         balance = (flowType === "inflow") ? amount : -amount;
         let lastTransaction = { amount, flowType, transactionTime };
         accounts.push({ user_id, name, amount, balance, flowType, lastTransaction, transactionTime, dividendsPaid: 0 });
-    }
 
-    const transactionData = {
-        user_id,
-        name,
-        amount,
-        totalLending,
-        type: flowType,
-        date: transactionTime,
-        balance,
-    };
+        transactionData.balance = balance;
 
-    console.log('user_id set in localStorage:', user_id);
-    console.log('Transaction data to be sent:', transactionData);
+        try {
+            const response = await fetch('http://localhost:3000/api/transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(transactionData)
+            });
 
-    fetch('http://localhost:3000/api/transactions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(transactionData)
-    })
-        .then(response => {
             if (!response.ok) {
                 throw new Error('Failed to store transaction');
             }
-            return response.json();
-        })
-        .then(async data => {
+            const data = await response.json();
             console.log('Transaction stored successfully:', data);
-            const transactions = await fetchTransactions(user_id)
-            await updateRenderTransactions(transactions);
-        })
-        .catch(error => console.error('Error storing transaction:', error));
+            await updateRenderTransactions();
+        } catch (error) {
+            console.error('Error storing transaction:', error);
+        }
+    }
 
-    // getTotalBalance();
     clearAccountInputs();
 }
 
@@ -173,6 +290,7 @@ addAccountBtn.addEventListener('click', addTransactions);
 async function deleteTransactions(index) {
     if (index > -1 && index < accounts.length) {
         const account = accounts[index];
+        const transactionId = account.id;
 
         // Set flowType before creating the account object
         if (account.flowType === 'inflow') {
@@ -186,15 +304,61 @@ async function deleteTransactions(index) {
 
         accounts.splice(index, 1);
         // getTotalBalance();
-        updateRenderTransactions();
+
+        try {
+            // Send DELETE request to the server
+            const response = await fetch(`http://localhost:3000/api/transactions/${transactionId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete transaction');
+            }
+
+            const data = await response.json();
+            console.log('Transaction deleted successfully:', data);
+
+            // Refresh the transactions list
+            // const transactions = await fetchTransactions(user_id);
+            await updateRenderTransactions();
+        } catch (error) {
+            console.error('Error deleting transaction:', error);
+        }
+    } else {
+        console.error('Invalid index for deleting transaction');
     }
 }
 
 async function updateRenderTransactions() {
+    console.log('update render funciton work');
     accountList.innerHTML = '';
-    accounts.sort((a, b) => b.transactionTime - a.transactionTime);
+
     const userId = localStorage.getItem('user_id');
-    fetchTransactions(userId);
+    const transactions = await fetchTransactions(userId);
+
+    console.log('Fetched transactions:', transactions);
+
+    accounts = transactions.map(transaction => {
+        const amount = parseFloat(transaction.amount);
+        const balance = parseFloat(transaction.balance);
+        console.log('Balance type:', typeof balance); // Add this line
+        return {
+            name: transaction.name,
+            balance: balance, // Ensure it's a number
+            lastTransaction: {
+                amount: amount,
+                flowType: transaction.type,
+                transactionTime: new Date(transaction.date)  // Ensure transactionTime is a Date object
+            },
+            transactionTime: new Date(transaction.date)  // Ensure transactionTime is a Date object
+        };
+    });
+
+    accounts.sort((a, b) => b.transactionTime - a.transactionTime);
+    console.log('Updated accounts:', accounts);
 
     accounts.forEach((account, index) => {
         const accountListItem = document.createElement('div');
