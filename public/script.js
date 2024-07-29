@@ -107,88 +107,6 @@ function formatDateToMySQL(dateString) {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-
-// async function addTransactions() {
-//     const user_id = localStorage.getItem('user_id');
-//     const name = accountNameInput.value;
-//     let amount = parseFloat(accountAmountInput.value);
-//     const transactionTime = new Date().toISOString();
-//     let flowType;
-//     let balance;
-
-//     if (name === "Select Username" || !amount || isNaN(amount) || amount <= 0 || isInflow === null) {
-//         alert("Please provide all necessary details correctly");
-//         return;
-//     }
-
-//     flowType = isInflow ? 'inflow' : 'outflow';
-
-//     const existingAccounts = await fetchTransactions(user_id);
-
-//     // Check if the account already exists
-//     let existingAccount = existingAccounts.find(account => account.name === name);
-
-//     if (existingAccount) {
-//         if (flowType === "inflow") {
-//             existingAccount.balance += amount;
-//         } else {
-//             existingAccount.balance -= amount;
-//             if (name === 'Admin') {
-//                 totalLending += amount;
-//                 console.log(`Admin Withdrawal: ${amount}. Total lending: ${totalLending}`);
-//             }
-//         }
-
-//         existingAccount.lastTransaction = { amount, flowType, transactionTime };
-//         balance = existingAccount.balance;
-
-//         await fetch(`http://localhost:3000/api/transactions/${existingAccount.id}`, {
-//             method: 'PUT',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify(transactionData)
-//         });
-
-//     } else {
-//         balance = (flowType === "inflow") ? amount : -amount;
-//         let lastTransaction = { amount, flowType, transactionTime };
-//         accounts.push({ user_id, name, amount, balance, flowType, lastTransaction, transactionTime, dividendsPaid: 0 });
-//     }
-
-//     const transactionData = {
-//         user_id,
-//         name,
-//         amount,
-//         totalLending,
-//         type: flowType,
-//         date: transactionTime,
-//         balance,
-//     };
-
-//     console.log('user_id set in localStorage:', user_id);
-//     console.log('Transaction data to be sent:', transactionData);
-
-
-//     try {
-//         const response = await fetch('http://localhost:3000/api/transactions', {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify(transactionData)
-//         });
-
-//         if (!response.ok) {
-//             throw new Error('Failed to store transaction');
-//         }
-//         const data = await response.json();
-//         console.log('Transaction stored successfully:', data);
-//         await updateRenderTransactions();
-//     } catch (error) {
-//         console.error('Error storing transaction:', error);
-//     }
-
-//     // getTotalBalance();
-//     clearAccountInputs();
-// }
-
 async function addTransactions() {
     const user_id = localStorage.getItem('user_id');
     const name = accountNameInput.value;
@@ -210,6 +128,7 @@ async function addTransactions() {
     let existingAccount = existingAccounts.find(account => account.name === name);
 
     let transactionData = {
+        id: 0, // Assuming your API returns this ID
         user_id,
         name,
         amount,
@@ -260,7 +179,6 @@ async function addTransactions() {
         // Add new account
         balance = (flowType === "inflow") ? amount : -amount;
         let lastTransaction = { amount, flowType, transactionTime };
-        accounts.push({ user_id, name, amount, balance, flowType, lastTransaction, transactionTime, dividendsPaid: 0 });
 
         transactionData.balance = balance;
 
@@ -275,6 +193,7 @@ async function addTransactions() {
                 throw new Error('Failed to store transaction');
             }
             const data = await response.json();
+            accounts.push({ id: data.id, user_id, name, amount, balance, flowType, lastTransaction, transactionTime, dividendsPaid: 0 });
             console.log('Transaction stored successfully:', data);
             await updateRenderTransactions();
         } catch (error) {
@@ -287,10 +206,11 @@ async function addTransactions() {
 
 addAccountBtn.addEventListener('click', addTransactions);
 
-async function deleteTransactions(index) {
+window.deleteTransactions = async function(index) {
     if (index > -1 && index < accounts.length) {
         const account = accounts[index];
         const transactionId = account.id;
+        console.log('Deleted ID: ' + transactionId);
 
         // Set flowType before creating the account object
         if (account.flowType === 'inflow') {
@@ -319,10 +239,7 @@ async function deleteTransactions(index) {
             }
 
             const data = await response.json();
-            console.log('Transaction deleted successfully:', data);
-
-            // Refresh the transactions list
-            // const transactions = await fetchTransactions(user_id);
+            console.log('Transaction deleted successfully:', data);;
             await updateRenderTransactions();
         } catch (error) {
             console.error('Error deleting transaction:', error);
@@ -346,6 +263,7 @@ async function updateRenderTransactions() {
         const balance = parseFloat(transaction.balance);
         console.log('Balance type:', typeof balance); // Add this line
         return {
+            id: transaction.id,
             name: transaction.name,
             balance: balance, // Ensure it's a number
             lastTransaction: {

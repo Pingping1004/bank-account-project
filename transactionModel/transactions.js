@@ -72,7 +72,7 @@ router.put('/:transactionId', (req, res) => {
     // Ensure balance is a number
     const balanceNumber = parseFloat(balance);
 
-    console.log('Received balance type:', typeof balance);
+    console.log('Received balance type:', typeof balanceNumber);
     const sql = 'UPDATE transactions SET amount = ?, type = ?, date = ?, balance = ? WHERE id = ?';
     const values = [amount, type, date, balanceNumber, transactionId];
 
@@ -88,12 +88,19 @@ router.put('/:transactionId', (req, res) => {
     });
 });
 
-router.delete('/:id', (req, res) => {
-    const { id } = req.params;
-    console.log('DELETE /api/transactions', req.query);
+router.delete('/:transactionId', (req, res) => {
+    const { transactionId } = req.params;
+    console.log('DELETE /api/transactions', req.params);
 
-    const sql = 'DELETE * FROM transactions WHERE id = ?';
-    db.query(sql, [id], (err, result) => {
+    // Ensure transactionId is provided
+    if (!transactionId) {
+        return res.status(400).json({ error: 'Missing transactionId parameter' });
+    }
+
+    const sql = 'DELETE FROM transactions WHERE id = ?';
+    const values = [transactionId];
+
+    db.query(sql, values, (err, result) => {
         if (err) {
             console.error('Error executing MySQL query:', err);
             res.status(500).json({ error: 'Failed to delete transactions' });
