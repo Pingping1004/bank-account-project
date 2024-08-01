@@ -116,6 +116,8 @@ async function addTransactions() {
     let flowType;
     let balance;
 
+    console.log('Selected name:', accountNameInput.value);
+
     if (name === "Select Username" || !amount || isNaN(amount) || amount <= 0 || isInflow === null) {
         alert("Please provide all necessary details correctly");
         return;
@@ -331,7 +333,7 @@ async function addUser() {
     const userId = localStorage.getItem('user_id');
     console.log('User ID: ', userId);
 
-    if (userName && !usernames.includes(userName)) {
+    if (userName && !usernames.some(user => user.name === userName)) {
 
         let userData = {
             user_id: userId,
@@ -350,13 +352,15 @@ async function addUser() {
             }
 
             const data = await response.json();
-            usernames.push(userData)
-            console.log('Transaction stored successfully:', data);
+            usernames.push({ id: data.accountId, user_id: userId, name: userName });
+            console.log('Account stored successfully:', data);
             await updateAccountList();
             addUserInput.value = '';
         } catch (error) {
             console.error('Error storing account names:', error);
         }
+    } else {
+        console.log('Account already exists or invalid name');
     }
 }
 
@@ -370,6 +374,7 @@ async function updateAccountList() {
 
     usernames = accounts.map(account => {
         return {
+            id: account.id,
             name: account.name,
         }
     })
@@ -378,12 +383,12 @@ async function updateAccountList() {
     console.log('Updated sorting usernames:', usernames);
 
     accountNameInput.innerHTML = `
-        <option value=Select Username>Select Username</option>
-        `
+        <option value="Select Username">Select Username</option>
+        <option value="Admin">Admin</option>`
 
     filterUserSelect.innerHTML = `
-        <option value=Select Username>Select Username</option>
-        `
+        <option value="Select Username">Select Username</option>
+        <option value="Admin">Admin</option>`
 
     deleteUserSelect.innerHTML = '<option value="Select Username">Select Username</option>'
 
@@ -397,37 +402,47 @@ async function updateAccountList() {
         deleteUserSelect.append(option.cloneNode(true));
     })
 }
-
 async function deleteAccount() {
-    const selectedUser = deleteUserSelect.value;
-    const index = usernames.indexOf(selectedUser);
-    const accountId = usernames.user_id;
-    console.log('Deleted account ID: ' + accountId);
+    const selectedUserName = deleteUserSelect.value.trim();
+    console.log('Selected user name:', selectedUserName);
 
-    if (selectedUser) {
-        if (index > -1 && index < usernames.length) {
-            try {
-                const response = await fetch(`http://localhost:3000/api/accounts/${accountId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-    
-                if (!response.ok) {
-                    throw new Error('Failed to delete transaction');
-                }
-    
-                const data = await response.json();
-                console.log('Account deleted successfully:', data);;
-                usernames.splice(index, 1);
-                await updateAccountList();
-                console.log(usernames);
-            } catch (error) {
-                console.error('Error deleting transaction:', error);
+    const selectedUser = usernames.find(user => user.name === selectedUserName);
+    console.log('Selected user:', selectedUser);
+
+    if (!selectedUser) {
+        console.log('No account name found');
+        return;
+    }
+
+    const accountId = selectedUser.id; // This should be correctly set
+    if (!accountId) {
+        console.log('No valid account ID found');
+        return;
+    }
+
+    console.log('Deleting account ID:', accountId);
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/accounts/${accountId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
             }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete account');
         }
+
+        const data = await response.json();
+        console.log('Account deleted successfully:', data);
+        usernames = usernames.filter(user => user.id !== accountId); // Update local list
+        await updateAccountList(); // Refresh UI
+        console.log('Updated usernames:', usernames);
+    } catch (error) {
+        console.error('Error deleting account:', error);
     }
 }
+
 
 deleteUserBtn.addEventListener('click', deleteAccount);
