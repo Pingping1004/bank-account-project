@@ -1,7 +1,6 @@
 import express from 'express';
 import db from '../db/connection.js';
 
-// const app = express();
 const router = express.Router(); // Changed to router
 
 function formatMySQLDatetime(dateString) {

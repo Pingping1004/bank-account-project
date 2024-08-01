@@ -1,5 +1,5 @@
 let accounts = [];
-const usernames = [];
+let usernames = [];
 
 let isInflow = null;
 let totalBalance = 0;
@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (userId) {
         // fetchTransactions(userId);
         await updateRenderTransactions();
+        await updateAccountList();
     }
 });
 
@@ -103,7 +104,7 @@ function formatDateToMySQL(dateString) {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
-    
+
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
@@ -144,7 +145,7 @@ async function addTransactions() {
         if (flowType === "inflow") {
             newBalance += amount;
         } else {
-            newBalance-= amount;
+            newBalance -= amount;
             if (name === 'Admin') {
                 totalLending += amount;
                 console.log(`Admin Withdrawal: ${amount}. Total lending: ${totalLending}`);
@@ -206,11 +207,11 @@ async function addTransactions() {
 
 addAccountBtn.addEventListener('click', addTransactions);
 
-window.deleteTransactions = async function(index) {
+window.deleteTransactions = async function (index) {
     if (index > -1 && index < accounts.length) {
         const account = accounts[index];
         const transactionId = account.id;
-        console.log('Deleted ID: ' + transactionId);
+        console.log('Deleted transaction ID: ' + transactionId);
 
         // Set flowType before creating the account object
         if (account.flowType === 'inflow') {
@@ -306,3 +307,127 @@ function clearAccountInputs() {
     accountNameInput.value = 'Select Username';
     accountAmountInput.value = '';
 }
+
+async function fetchUser(userId) {
+    console.log('Fetching accounts for user ID:', userId);
+    try {
+        const response = await fetch(`http://localhost:3000/api/accounts?user_id=${userId}`);
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch users');
+        }
+
+        const data = await response.json();
+        console.log('Fetch accounts:', data);
+        return data;
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        return [];
+    }
+}
+
+async function addUser() {
+    const userName = addUserInput.value.trim();
+    const userId = localStorage.getItem('user_id');
+    console.log('User ID: ', userId);
+
+    if (userName && !usernames.includes(userName)) {
+
+        let userData = {
+            user_id: userId,
+            name: userName
+        }
+
+        try {
+            const response = await fetch('http://localhost:3000/api/accounts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to store transaction');
+            }
+
+            const data = await response.json();
+            usernames.push(userData)
+            console.log('Transaction stored successfully:', data);
+            await updateAccountList();
+            addUserInput.value = '';
+        } catch (error) {
+            console.error('Error storing account names:', error);
+        }
+    }
+}
+
+addUserBtn.addEventListener('click', addUser);
+
+async function updateAccountList() {
+    const userId = localStorage.getItem('user_id');
+    const accounts = await fetchUser(userId);
+
+    console.log('Fetched transactions:', accounts);
+
+    usernames = accounts.map(account => {
+        return {
+            name: account.name,
+        }
+    })
+
+    usernames.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    console.log('Updated sorting usernames:', usernames);
+
+    accountNameInput.innerHTML = `
+        <option value=Select Username>Select Username</option>
+        `
+
+    filterUserSelect.innerHTML = `
+        <option value=Select Username>Select Username</option>
+        `
+
+    deleteUserSelect.innerHTML = '<option value="Select Username">Select Username</option>'
+
+    usernames.forEach(username => {
+        const option = document.createElement('option');
+        option.value = username.name;
+        option.textContent = username.name;
+
+        accountNameInput.append(option);
+        filterUserSelect.append(option.cloneNode(true));
+        deleteUserSelect.append(option.cloneNode(true));
+    })
+}
+
+async function deleteAccount() {
+    const selectedUser = deleteUserSelect.value;
+    const index = usernames.indexOf(selectedUser);
+    const accountId = usernames.user_id;
+    console.log('Deleted account ID: ' + accountId);
+
+    if (selectedUser) {
+        if (index > -1 && index < usernames.length) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/accounts/${accountId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+    
+                if (!response.ok) {
+                    throw new Error('Failed to delete transaction');
+                }
+    
+                const data = await response.json();
+                console.log('Account deleted successfully:', data);;
+                usernames.splice(index, 1);
+                await updateAccountList();
+                console.log(usernames);
+            } catch (error) {
+                console.error('Error deleting transaction:', error);
+            }
+        }
+    }
+}
+
+deleteUserBtn.addEventListener('click', deleteAccount);

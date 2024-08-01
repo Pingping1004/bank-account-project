@@ -4,6 +4,7 @@ import cors from 'cors'
 import bodyParser from 'body-parser'
 import authRoutes from './userModel/auth.js';
 import transactionRoutes from './transactionModel/transactions.js';
+import accountRoutes from './accountModel/account.js';
 
 const app = express();
 const port = process.env.MYSQL_PORT || 3000;
@@ -15,9 +16,9 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(express.static('public'));
 
-
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/accounts', accountRoutes);
 
 app.listen(3000, () => {
     console.log(`Server is running on http://localhost:${port}`)
