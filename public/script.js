@@ -386,10 +386,6 @@ async function updateAccountList() {
         <option value="Select Username">Select Username</option>
         <option value="Admin">Admin</option>`
 
-    filterUserSelect.innerHTML = `
-        <option value="Select Username">Select Username</option>
-        <option value="Admin">Admin</option>`
-
     deleteUserSelect.innerHTML = '<option value="Select Username">Select Username</option>'
 
     usernames.forEach(username => {
@@ -398,7 +394,6 @@ async function updateAccountList() {
         option.textContent = username.name;
 
         accountNameInput.append(option);
-        filterUserSelect.append(option.cloneNode(true));
         deleteUserSelect.append(option.cloneNode(true));
     })
 }
