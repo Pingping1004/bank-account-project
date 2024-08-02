@@ -4,9 +4,8 @@ let usernames = [];
 let isInflow = null;
 let totalBalance = 0;
 let bankBalance = 0;
-let dividendsPaid = 0;
-let totalDividendPaid = 0;
 let totalLending = 0;
+let adminAddCount = 0;
 
 //add expense section
 const depositBtn = document.querySelector('#deposit-btn');
@@ -152,6 +151,12 @@ async function addTransactions() {
         let newBalance = parseFloat(existingAccount.balance); // Ensure balance is a number
         if (flowType === "inflow") {
             newBalance += amount;
+            if (name === 'Admin' || adminAddCount >= 1) {
+                lending = parseFloat(existingAccount.lending) || 0;
+                lending -= amount;
+                console.log(`Admin Receive money back: ${amount}. Total Receive money back: ${lending}`);
+                adminAddCount ++;
+            }
         } else {
             newBalance -= amount;
             if (name === 'Admin') {
