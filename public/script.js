@@ -35,7 +35,7 @@ const applyFilterBtn = document.querySelector('#apply-filter-btn');
 //dashboard information
 const lendingElement = document.querySelector('#lending-money');
 const bankBalanceElement = document.querySelector('#bank-balance');
-const dividendsPaidElement = document.querySelector('#dividend-paid');
+const accountNumberElement = document.querySelector('#account-number');
 
 depositBtn.addEventListener('click', () => isInflow = true, accounts.flowType = "inflow");
 withdrawalBtn.addEventListener('click', () => isInflow = false, accounts.flowType = "outflow");
@@ -70,15 +70,20 @@ withdrawalBtn.addEventListener('click', (event) => {
 // alert("Using admin account as a bank account");
 // alert("Set the initial cash in bank");
 
-// Fetch transactions on page load if user is logged in
-document.addEventListener('DOMContentLoaded', async () => {
+async function initializePage() {
     const userId = localStorage.getItem('user_id');
     if (userId) {
-        // fetchTransactions(userId);
         await updateRenderTransactions();
         await updateAccountList();
+        setInterval(async () => {
+            await updateBalances();
+            await updateRenderTransactions();
+        }, 60000);
     }
-});
+}
+
+// Fetch transactions on page load if user is logged in
+document.addEventListener('DOMContentLoaded', initializePage);
 
 async function fetchTransactions(userId) {
     console.log(`Fetching transactions for user ID: ${userId}`);
@@ -204,7 +209,7 @@ async function addTransactions() {
             console.error('Error storing transaction:', error);
         }
     }
-    
+
     console.log(accounts);
     console.log('Total lending:', lending);
     clearAccountInputs();
@@ -267,7 +272,7 @@ async function updateRenderTransactions() {
     accounts = transactions.map(transaction => {
         const amount = parseFloat(transaction.amount);
         const balance = parseFloat(transaction.balance);
-        const lending = parseFloat(transaction.lending) || 0; 
+        const lending = parseFloat(transaction.lending) || 0;
         console.log('Balance type:', typeof balance); // Add this line
         return {
             id: transaction.id,
@@ -400,7 +405,9 @@ async function updateAccountList() {
         accountNameInput.append(option);
         deleteUserSelect.append(option.cloneNode(true));
     })
+    getAccountNumber();
 }
+
 async function deleteAccount() {
     const selectedUserName = deleteUserSelect.value.trim();
     console.log('Selected user name:', selectedUserName);
@@ -459,38 +466,28 @@ function getTotalLending() {
     return totalLending;
 }
 
-function calculateInterest() {
-    const currentTime = new Date();
-
-    accounts.forEach(account => {
-
-        if (account.name === 'Admin') {
-            return;
-        }
-
-        const elapsedTime = (currentTime - account.transactionTime) / (1000 * 60); // in minutes
-        let interestRate = 0;
-
-        if (elapsedTime >= 1) {
-            interestRate = 0.5;
-        } else if (elapsedTime >= 0.5) {
-            interestRate = 0.3;
-        } else if (elapsedTime >= 0.25) {
-            interestRate = 0.2;
-        }
-        console.log(`Elapsed time: ${elapsedTime} minutes, Interest Rate: ${interestRate}`);
-
-        if (interestRate > 0) {
-            const interest = account.balance * (interestRate); // Ensure the interestRate is a percentage
-            account.balance += interest;
-            account.dividendsPaid += interest;
-            console.log(`Account ${account.name}: Increased by ${interestRate}% to ${account.balance}`);
-        }
-
-        account.transactionTime = currentTime;
-    });
-
-    updateAccountList();
+function getAccountNumber() {
+    let accountNumber = parseFloat(usernames.length);
+    console.log('Account number: ', typeof accountNumber);
+    console.log('Account number: ', accountNumber);
+    accountNumberElement.textContent = `${accountNumber}`;
 }
 
-// setInterval(calculateInterest, 1000 * 60);
+async function updateBalances() {
+    try {
+        const response = await fetch('http://localhost:3000/api/update-balances', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update balances');
+        }
+
+        const data = await response.json();
+        console.log('Balances updated successfully:', data);
+        // await updateRenderTransactions();
+    } catch (error) {
+        console.error('Error updating balances:', error);
+    }
+}
