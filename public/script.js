@@ -486,7 +486,6 @@ async function updateBalances() {
 
         const data = await response.json();
         console.log('Balances updated successfully:', data);
-        // await updateRenderTransactions();
     } catch (error) {
         console.error('Error updating balances:', error);
     }
