@@ -115,6 +115,7 @@ async function addTransactions() {
     const transactionTime = formatDateToMySQL(new Date());
     let flowType;
     let balance;
+    let lending = 0;
 
     console.log('Selected name:', accountNameInput.value);
 
@@ -135,10 +136,10 @@ async function addTransactions() {
         user_id,
         name,
         amount,
-        totalLending,
+        lending,
         type: flowType,
         date: formatDateToMySQL(transactionTime),
-        balance: balance // Placeholder, will be updated later
+        balance: balance, // Placeholder, will be updated later
     };
 
     if (existingAccount) {
@@ -149,17 +150,16 @@ async function addTransactions() {
         } else {
             newBalance -= amount;
             if (name === 'Admin') {
-                totalLending += amount;
-                console.log(`Admin Withdrawal: ${amount}. Total lending: ${totalLending}`);
+                lending = parseFloat(existingAccount.lending) || 0;
+                lending += amount;
+                console.log(`Admin Withdrawal: ${amount}. Total lending: ${lending}`);
             }
         }
 
-        // balance = existingAccount.balance;
         existingAccount.lastTransaction = { amount, flowType, transactionTime };
         balance = newBalance;
-
-        // transactionData.balance = balance;
         transactionData.balance = balance;
+        transactionData.lending = lending;
 
         try {
             const response = await fetch(`http://localhost:3000/api/transactions/${existingAccount.id}`, {
@@ -184,6 +184,7 @@ async function addTransactions() {
         let lastTransaction = { amount, flowType, transactionTime };
 
         transactionData.balance = balance;
+        transactionData.lending = lending;
 
         try {
             const response = await fetch('http://localhost:3000/api/transactions', {
@@ -196,14 +197,16 @@ async function addTransactions() {
                 throw new Error('Failed to store transaction');
             }
             const data = await response.json();
-            accounts.push({ id: data.id, user_id, name, amount, balance, flowType, lastTransaction, transactionTime, dividendsPaid: 0 });
+            accounts.push({ id: data.id, user_id, name, amount, lending, balance, flowType, lastTransaction, transactionTime, dividendsPaid: 0 });
             console.log('Transaction stored successfully:', data);
             await updateRenderTransactions();
         } catch (error) {
             console.error('Error storing transaction:', error);
         }
     }
-
+    
+    console.log(accounts);
+    console.log('Total lending:', lending);
     clearAccountInputs();
 }
 
@@ -264,11 +267,13 @@ async function updateRenderTransactions() {
     accounts = transactions.map(transaction => {
         const amount = parseFloat(transaction.amount);
         const balance = parseFloat(transaction.balance);
+        const lending = parseFloat(transaction.lending) || 0; 
         console.log('Balance type:', typeof balance); // Add this line
         return {
             id: transaction.id,
             name: transaction.name,
-            balance: balance, // Ensure it's a number
+            balance: balance,
+            lending: lending, // Ensure it's a number
             lastTransaction: {
                 amount: amount,
                 flowType: transaction.type,
@@ -297,12 +302,11 @@ async function updateRenderTransactions() {
         accountList.append(accountListItem);
     });
 
-    // bankBalanceElement.textContent = `$${parseFloat(getBankBalance()).toFixed(2)}`;
-    // lendingElement.textContent = `$${totalLending.toFixed(2)}`;
     // dividendsPaidElement.textContent = `$${getTotalDividendPaid()}`;
 
     // getTotalBalance();
-    // getBankBalance();
+    getBankBalance();
+    getTotalLending();
 }
 
 function clearAccountInputs() {
@@ -439,5 +443,54 @@ async function deleteAccount() {
     }
 }
 
-
 deleteUserBtn.addEventListener('click', deleteAccount);
+
+function getBankBalance() {
+    bankBalance = accounts.reduce((total, account) => total += account.balance, 0);
+    console.log('Bank balance is:', bankBalance);
+    bankBalanceElement.textContent = `$${bankBalance.toFixed(2)}`;
+    return bankBalance;
+}
+
+function getTotalLending() {
+    totalLending = accounts.reduce((total, account) => total += account.lending, 0);
+    console.log('Total lending is:', totalLending);
+    lendingElement.textContent = `$${totalLending.toFixed(2)}`;
+    return totalLending;
+}
+
+function calculateInterest() {
+    const currentTime = new Date();
+
+    accounts.forEach(account => {
+
+        if (account.name === 'Admin') {
+            return;
+        }
+
+        const elapsedTime = (currentTime - account.transactionTime) / (1000 * 60); // in minutes
+        let interestRate = 0;
+
+        if (elapsedTime >= 1) {
+            interestRate = 0.5;
+        } else if (elapsedTime >= 0.5) {
+            interestRate = 0.3;
+        } else if (elapsedTime >= 0.25) {
+            interestRate = 0.2;
+        }
+        console.log(`Elapsed time: ${elapsedTime} minutes, Interest Rate: ${interestRate}`);
+
+        if (interestRate > 0) {
+            const interest = account.balance * (interestRate); // Ensure the interestRate is a percentage
+            account.balance += interest;
+            account.dividendsPaid += interest;
+            console.log(`Account ${account.name}: Increased by ${interestRate}% to ${account.balance}`);
+        }
+
+        account.transactionTime = currentTime;
+    });
+
+    updateAccountList();
+}
+
+// setInterval(calculateInterest, 1000 * 60);

@@ -17,7 +17,7 @@ function formatMySQLDatetime(dateString) {
 
 // Store transaction endpoint
 router.post('/', async (req, res) => {
-    const { user_id, name, amount, type, date, balance } = req.body;
+    const { user_id, name, amount, lending, type, date, balance } = req.body;
     console.log('Received transaction data:', req.body);
 
     if (!user_id || !name || !amount || !type || !date) {
@@ -26,9 +26,9 @@ router.post('/', async (req, res) => {
     }
 
     const formattedDate = formatMySQLDatetime(date);
-    const sql = 'INSERT INTO transactions (user_id, name, amount, type, date, balance) VALUES (?, ?, ?, ?, ?, ?)';
+    const sql = 'INSERT INTO transactions (user_id, name, amount, lending, type, date, balance) VALUES (?, ?, ?, ?, ?, ?, ?)';
     try {
-        const [result] = await db.promise().query(sql, [user_id, name, amount, type, formattedDate, balance]);
+        const [result] = await db.promise().query(sql, [user_id, name, amount, lending, type, formattedDate, balance]);
         res.status(201).json({ message: 'Transaction stored successfully', transactionId: result.insertId });
     }
     catch (error) {
@@ -59,7 +59,7 @@ router.get('/', (req, res) => {
 
 router.put('/:transactionId', (req, res) => {
     const { transactionId } = req.params;
-    const { amount, type, date, balance } = req.body;
+    const { amount, lending, type, date, balance } = req.body;
     console.log('PUT /api/transactions', req.params);
     console.log('Request Body:', req.body);
 
@@ -72,8 +72,8 @@ router.put('/:transactionId', (req, res) => {
     const balanceNumber = parseFloat(balance);
 
     console.log('Received balance type:', typeof balanceNumber);
-    const sql = 'UPDATE transactions SET amount = ?, type = ?, date = ?, balance = ? WHERE id = ?';
-    const values = [amount, type, date, balanceNumber, transactionId];
+    const sql = 'UPDATE transactions SET amount = ?, lending = ?, type = ?, date = ?, balance = ? WHERE id = ?';
+    const values = [amount, lending, type, date, balanceNumber, transactionId];
 
     db.query(sql, values, (err, result) => {
         if (err) {
