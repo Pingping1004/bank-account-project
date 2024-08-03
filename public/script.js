@@ -76,12 +76,12 @@ async function initializePage() {
     if (userId) {
         await updateRenderTransactions();
         await updateAccountList();
-        
+
         // Clear existing interval if it exists
         if (intervalId) {
             clearInterval(intervalId);
         }
-        
+
         intervalId = setInterval(async () => {
             await updateBalances();
             await updateRenderTransactions();
@@ -288,6 +288,7 @@ async function updateRenderTransactions() {
         const balance = parseFloat(transaction.balance);
         const lending = parseFloat(transaction.lending) || 0;
         console.log('Balance type:', typeof balance); // Add this line
+
         return {
             id: transaction.id,
             name: transaction.name,
@@ -304,23 +305,21 @@ async function updateRenderTransactions() {
 
     accounts.sort((a, b) => b.transactionTime - a.transactionTime);
 
-    if (sortFilter === 'newest to oldest') {
-        accounts.sort((a, b) => b.transactionTime - a.transactionTime);
-        console.log('newest to oldest sorting');
-    } else if (sortFilter === 'oldest to newest') {
-        accounts.sort((a, b) => a.transactionTime - b.transactionTime);
-        console.log('oldest to oldest newest sorting');
-    } else if (sortFilter === 'alphabetical(A to Z)') {
+    if (sortFilter === 'alphabetical(A-Z)') {
         accounts.sort((a, b) => a.name.localeCompare(b.name));
-        console.log('alphabetical(A to Z)');
-    } else if (sortFilter === 'greatest balance to lowest sorting') {
-        accounts.sort((a, b) => a.balance - b.balance);
-        console.log('greatest balance to lowest');
-    } else if (sortFilter === 'lowest balance to greatest sorting') {
+        console.log('alphabetical(A-Z)');
+    } else if (sortFilter === 'reverse alphabetical(Z-A)') {
+        accounts.sort((a, b) => b.name.localeCompare(a.name));
+        console.log('alphabetical(A-Z)');
+    } else if (sortFilter === 'greatest balance to lowest') {
+        accounts.sort((a, b) => b.balance - a.balance);
+        console.log('greatest balance to lowest sorting');
+    } else if (sortFilter === 'lowest balance to greatest') {
         accounts.sort((a, b) => a.balance - b.balance);
         console.log('lowest balance to greatest sorting');
+    } else {
+        console.log('No valid sorting filter applied');
     }
-    console.log('Sorted accounts:', accounts);
 
     accounts.forEach((account, index) => {
         const accountListItem = document.createElement('div');
@@ -338,12 +337,14 @@ async function updateRenderTransactions() {
         accountList.append(accountListItem);
     });
 
+    getAccountNumber();
     getBankBalance();
     getTotalLending();
 }
 
 applyFilterBtn.addEventListener('click', async () => {
     console.log('Filter button is clicked');
+    console.log('Selected filter value:', filterUserSelect.value); // Debug log
     await updateRenderTransactions();
 });
 
@@ -439,7 +440,6 @@ async function updateAccountList() {
         accountNameInput.append(option);
         deleteUserSelect.append(option.cloneNode(true));
     })
-    getAccountNumber();
 }
 
 async function deleteAccount() {
@@ -501,7 +501,7 @@ function getTotalLending() {
 }
 
 function getAccountNumber() {
-    let accountNumber = parseFloat(usernames.length);
+    let accountNumber = parseFloat(accounts.length);
     console.log('Account number: ', typeof accountNumber);
     console.log('Account number: ', accountNumber);
     accountNumberElement.textContent = `${accountNumber}`;
