@@ -69,12 +69,20 @@ withdrawalBtn.addEventListener('click', (event) => {
 // alert("Using admin account as a bank account");
 // alert("Set the initial cash in bank");
 
+let intervalId;
+
 async function initializePage() {
     const userId = localStorage.getItem('user_id');
     if (userId) {
         await updateRenderTransactions();
         await updateAccountList();
-        setInterval(async () => {
+        
+        // Clear existing interval if it exists
+        if (intervalId) {
+            clearInterval(intervalId);
+        }
+        
+        intervalId = setInterval(async () => {
             await updateBalances();
             await updateRenderTransactions();
         }, 60000);
@@ -155,7 +163,7 @@ async function addTransactions() {
                 lending = parseFloat(existingAccount.lending) || 0;
                 lending -= amount;
                 console.log(`Admin Receive money back: ${amount}. Total Receive money back: ${lending}`);
-                adminAddCount ++;
+                adminAddCount++;
             }
         } else {
             newBalance -= amount;
@@ -271,6 +279,7 @@ async function updateRenderTransactions() {
 
     const userId = localStorage.getItem('user_id');
     const transactions = await fetchTransactions(userId);
+    const sortFilter = filterUserSelect.value.trim();
 
     console.log('Fetched transactions:', transactions);
 
@@ -294,7 +303,24 @@ async function updateRenderTransactions() {
     });
 
     accounts.sort((a, b) => b.transactionTime - a.transactionTime);
-    console.log('Updated accounts:', accounts);
+
+    if (sortFilter === 'newest to oldest') {
+        accounts.sort((a, b) => b.transactionTime - a.transactionTime);
+        console.log('newest to oldest sorting');
+    } else if (sortFilter === 'oldest to newest') {
+        accounts.sort((a, b) => a.transactionTime - b.transactionTime);
+        console.log('oldest to oldest newest sorting');
+    } else if (sortFilter === 'alphabetical(A to Z)') {
+        accounts.sort((a, b) => a.name.localeCompare(b.name));
+        console.log('alphabetical(A to Z)');
+    } else if (sortFilter === 'greatest balance to lowest sorting') {
+        accounts.sort((a, b) => a.balance - b.balance);
+        console.log('greatest balance to lowest');
+    } else if (sortFilter === 'lowest balance to greatest sorting') {
+        accounts.sort((a, b) => a.balance - b.balance);
+        console.log('lowest balance to greatest sorting');
+    }
+    console.log('Sorted accounts:', accounts);
 
     accounts.forEach((account, index) => {
         const accountListItem = document.createElement('div');
@@ -312,12 +338,15 @@ async function updateRenderTransactions() {
         accountList.append(accountListItem);
     });
 
-    // dividendsPaidElement.textContent = `$${getTotalDividendPaid()}`;
-
-    // getTotalBalance();
     getBankBalance();
     getTotalLending();
 }
+
+applyFilterBtn.addEventListener('click', async () => {
+    console.log('Filter button is clicked');
+    await updateRenderTransactions();
+});
+
 
 function clearAccountInputs() {
     accountNameInput.value = 'Select Username';
@@ -480,8 +509,8 @@ function getAccountNumber() {
 
 async function updateBalances() {
     try {
-        const response = await fetch('http://localhost:3000/api/update-balances', {
-            method: 'POST',
+        const response = await fetch('http://localhost:3000/api/interests/update-balances', {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
         });
 
