@@ -1,0 +1,102 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+section {
+    margin: 4.5rem 0;
+}
+
+/*-----------------------------Basic Setup section end here---------------------------- */
+
+#signup-container, #login-container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.signup-container, .login-container {
+    display: grid;
+    text-align: center;
+}
+
+/*-----------------------------Sign Up and Login page section end here---------------------------- */
+
+.panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2rem;
+}
+
+.balance {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.balance-btn {
+    display: grid;
+    grid-template-columns:  1fr 1fr;
+}
+
+#deposit-btn:hover {
+    background-color: #007bff;
+    color: #ffffff
+}
+
+#withdrawal-btn:hover {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
+/*-----------------------------Left Panel Panelsection end here---------------------------- */
+
+.right-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.add-user {
+    display: flex;
+    flex-direction: column;
+}
+
+.delete-user {
+    display: flex;
+    flex-direction: column;
+}
+
+/*-----------------------------Right Panel section end here---------------------------- */
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 1.5rem;
+}
+
+.dashboard-item {
+    padding: 16px 12px;
+    background-color: black;
+    color: white;
+}
+
+/*-----------------------------Dashboard section end here---------------------------- */
+
+.find-account-dropdown {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    column-gap: 1rem;
+}
+
+.find-account-dropdown {
+    align-items: center;
+} 
+/*-----------------------------Find Account Dropdown section end here---------------------------- */
+/*
+#
+#
+#
+*/
+/*-----------------------------Account List section end here---------------------------- */
