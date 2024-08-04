@@ -66,8 +66,8 @@ withdrawalBtn.addEventListener('click', (event) => {
     isInflow = false;
 });
 
-// alert("Using admin account as a bank account");
-// alert("Set the initial cash in bank");
+alert("Using admin account as a bank account");
+alert("Set the initial cash in bank for the first time");
 
 let intervalId;
 
