@@ -16,7 +16,7 @@ dotenv.config();
 // app.use(bodyParser.json());
 // app.use(cors());
 app.use(cors({
-    origin: 'https://bank-account-web-file.netlify.app' // Replace with your frontend domain
+    origin: 'https://bank-account-website.netlify.app' // Replace with your frontend domain
   }));
 app.use(express.json());
 app.use(express.static('public'));
