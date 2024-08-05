@@ -14,6 +14,7 @@ const db = mysql.createConnection({
 //verify connection between backend server and database
 db.connect((err) => {
     if (err) {
+        console.error('Database connection failed:', err.stack);
         throw err;
     }
     console.log('Connect to database successfully!');
