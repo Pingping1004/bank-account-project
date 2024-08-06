@@ -1,0 +1,7 @@
+# Handle text files
+*.js text
+*.json text
+*.html text
+
+# Ensure .sh files are treated as text
+*.sh text
