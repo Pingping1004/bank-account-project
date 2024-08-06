@@ -1,0 +1,79 @@
+### Signup Request
+POST http://localhost:3000/api/auth/signup
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "password123"
+}
+
+### Login Request
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "password123"
+}
+
+### Add Transaction
+POST http://localhost:3000/api/transactions
+Content-Type: application/json
+
+{
+    "user_id": "001",
+    "name": "username",
+    "amount": "0",
+    "type": "cashflow",
+    "date": "2024-07-14 10:30:00",
+    "balance": "10.00"
+}
+
+### Update Existing Transaction 
+PUT http://localhost:3000/api/transactions/:transactionId
+Content-Type: application/json
+
+{
+    "user_id": "001",
+    "name": "username",
+    "amount": "0",
+    "type": "cashflow",
+    "date": "2024-07-14T10:30:00Z",
+    "balance": "10.00"
+}
+
+### Show Transaction
+GET http://localhost:3000/api/transactions?user_id=userId
+
+### Delete Transaction
+DELETE http://localhost:3000/api/transactions/:transactionId
+Content-Type: application/json
+
+{
+    "user_id": "001",
+    "name": "username",
+    "amount": "0",
+    "type": "cashflow",
+    "date": "2024-07-14 10:30:00",
+    "balance": "10.00"
+}
+
+### Add username
+POST http://localhost:3000/api/accounts
+Content-Type: application/json
+
+{
+    "user_id": "001",
+    "name": "accountName"
+}
+
+### Show username
+GET http://localhost:3000/api/accounts/?user_id=userId
+
+### Delete username
+DELETE http://localhost:3000/api/accounts/:accountId
+Content-Type: application/json
+
+### Add Interest
+PUT http://localhost:3000/api/interests/update-balances
+Content-Type: application/json
