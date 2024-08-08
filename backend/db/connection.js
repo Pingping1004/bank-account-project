@@ -11,14 +11,6 @@ const db = mysql.createConnection({
     port: process.env.MYSQL_PORT,
 });
 
-// const db = mysql.createConnection({
-//     host: functions.config().db.host,
-//     user: functions.config().db.user,
-//     password: functions.config().db.password,
-//     database: functions.config().db.name,
-//     port: functions.config().db.port || 3306, // Default to 3306 if not set
-// });
-
 //verify connection between backend server and database
 db.connect((err) => {
     if (err) {
