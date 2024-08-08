@@ -16,10 +16,13 @@ dotenv.config();
 // app.use(bodyParser.json());
 // app.use(cors());
 app.use(cors({
-    origin: 'https://bank-account-website.netlify.app' // Replace with your frontend domain
+    origin: ['https://bank-account-website.netlify.app'], // Replace with your frontend domain
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   }));
 app.use(express.json());
 app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: true} ));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);

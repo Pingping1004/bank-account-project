@@ -11,6 +11,12 @@ const db = mysql.createConnection({
     port: process.env.MYSQL_PORT,
 });
 
+console.log('MYSQL_HOSTNAME:', process.env.MYSQL_HOSTNAME);
+console.log('MYSQL_USERNAME:', process.env.MYSQL_USERNAME);
+console.log('MYSQL_PASSWORD:', process.env.MYSQL_PASSWORD);
+console.log('MYSQL_DB:', process.env.MYSQL_DB);
+console.log('MYSQL_PORT:', process.env.MYSQL_PORT);
+
 //verify connection between backend server and database
 db.connect((err) => {
     if (err) {
